@@ -11,6 +11,7 @@ resolvers += "softprops-maven" at "http://dl.bintray.com/content/softprops/maven
 val macwire = "com.softwaremill.macwire" %% "macros" % "2.2.5" % "provided"
 val scalaTest = "org.scalatest" %% "scalatest" % "3.0.1" % Test
 val base64 = "me.lessis" %% "base64" % "0.2.0"
+val jwt = "com.pauldijou" %% "jwt-play-json" % "0.12.1"
 
 lazy val `public-transportation-services` = (project in file("."))
   .aggregate(`common`, `identity-api`, `identity-impl`)
@@ -38,7 +39,8 @@ lazy val `identity-impl` = (project in file("identity-impl"))
       lagomScaladslTestKit,
       macwire,
       scalaTest,
-      base64
+      base64,
+      jwt
     )
   )
   .settings(lagomForkedTestSettings: _*)

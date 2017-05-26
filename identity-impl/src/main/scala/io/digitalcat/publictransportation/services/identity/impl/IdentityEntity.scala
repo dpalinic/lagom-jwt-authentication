@@ -6,8 +6,8 @@ import com.lightbend.lagom.scaladsl.api.transport.{ExceptionMessage, NotFound, T
 import com.lightbend.lagom.scaladsl.persistence.PersistentEntity
 import com.lightbend.lagom.scaladsl.playjson.{JsonSerializer, JsonSerializerRegistry}
 import io.digitalcat.publictransportation.services.common.GeneratedIdDone
-import io.digitalcat.publictransportation.services.identity.api.{RegisteredClientDone, UserCreationDone}
-import io.digitalcat.publictransportation.services.identity.impl.util.SecurePasswordHashing
+import io.digitalcat.publictransportation.services.identity.api.{ClientRegistrationDone, UserCreationDone, UserLogin, UserLoginDone}
+import io.digitalcat.publictransportation.services.identity.impl.util.{SecurePasswordHashing, Token}
 
 import scala.collection.immutable.Seq
 
@@ -36,13 +36,13 @@ class IdentityEntity extends PersistentEntity {
             }
         }
     }
-    .onReadOnlyCommand[GetRegisteredClient, RegisteredClientDone] {
+    .onReadOnlyCommand[GetRegisteredClient, ClientRegistrationDone] {
       case (GetRegisteredClient(), ctx, state) =>
         state.client match {
           case None =>
             throw new NotFound(TransportErrorCode.BadRequest, new ExceptionMessage(s"Client registered with ${entityId} can't be found", ""))
           case Some(client: Client) =>
-            ctx.reply(RegisteredClientDone(
+            ctx.reply(ClientRegistrationDone(
                 entityId,
                 client.name,
                 client.users.map(user => UserCreationDone(
@@ -70,8 +70,14 @@ object IdentitySerializerRegistry extends JsonSerializerRegistry {
     JsonSerializer[GeneratedIdDone],
     JsonSerializer[CreateUser],
     JsonSerializer[RegisterClient],
+    JsonSerializer[ClientRegistrationDone],
     JsonSerializer[ClientCreated],
     JsonSerializer[UserCreated],
+    JsonSerializer[UserLogin],
+    JsonSerializer[UserLoginDone],
+    JsonSerializer[UserCreated],
+    JsonSerializer[UserCreationDone],
+    JsonSerializer[Token],
     JsonSerializer[IdentityState]
   )
 }

@@ -9,7 +9,7 @@ import io.digitalcat.publictransportation.services.common.GeneratedIdDone
 trait IdentityService extends Service
 {
   def registerClient(): ServiceCall[ClientRegistration, GeneratedIdDone]
-  def getRegisteredClient(id: String): ServiceCall[NotUsed, RegisteredClientDone]
+  def getRegisteredClient(id: String): ServiceCall[NotUsed, ClientRegistrationDone]
   def loginUser(): ServiceCall[UserLogin, UserLoginDone]
   def createUser(clientId: String): ServiceCall[UserCreation, UserCreationDone]
 
@@ -36,36 +36,37 @@ case class ClientRegistration(
 )
 object ClientRegistration
 {
-  implicit val format: Format[ClientRegistration] = Json.format[ClientRegistration]
+  implicit val format: Format[ClientRegistration] = Json.format
 }
 
-case class RegisteredClientDone(
+case class ClientRegistrationDone(
   id: String,
   company: String,
   users: Seq[UserCreationDone]
 )
-object RegisteredClientDone
+object ClientRegistrationDone
 {
-  implicit val format: Format[RegisteredClientDone] = Json.format[RegisteredClientDone]
+  implicit val format: Format[ClientRegistrationDone] = Json.format
 }
 
 case class UserLogin
 (
-  user: String,
+  username: String,
   password: String
 )
 object UserLogin
 {
-  implicit val format: Format[UserLogin] = Json.format[UserLogin]
+  implicit val format: Format[UserLogin] = Json.format
 }
 
 case class UserLoginDone
 (
-  token: String
+  authToken: String,
+  refreshToken: String
 )
 object UserLoginDone
 {
-  implicit val format: Format[UserLoginDone] = Json.format[UserLoginDone]
+  implicit val format: Format[UserLoginDone] = Json.format
 }
 
 case class UserCreation(
@@ -77,7 +78,7 @@ case class UserCreation(
 )
 object UserCreation
 {
-  implicit val format: Format[UserCreation] = Json.format[UserCreation]
+  implicit val format: Format[UserCreation] = Json.format
 }
 
 case class UserCreationDone(
@@ -89,5 +90,5 @@ case class UserCreationDone(
 )
 object UserCreationDone
 {
-  implicit val format: Format[UserCreationDone] = Json.format[UserCreationDone]
+  implicit val format: Format[UserCreationDone] = Json.format
 }
