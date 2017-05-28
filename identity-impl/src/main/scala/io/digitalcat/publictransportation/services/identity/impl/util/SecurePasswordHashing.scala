@@ -8,6 +8,10 @@ import base64.Encode.{ urlSafe => toBase64UrlSafe }
 
 import base64.Decode.{ urlSafe => fromBase64UrlSafe }
 
+/**
+  * Credits: Age Mooij
+  * https://gist.github.com/agemooij
+  */
 object SecurePasswordHashing {
   private val RandomSource = new SecureRandom()
   private val HashPartSeparator = ":"

@@ -2,7 +2,7 @@ package io.digitalcat.publictransportation.services.identity.impl
 
 import com.lightbend.lagom.scaladsl.persistence.PersistentEntity
 import io.digitalcat.publictransportation.services.common.GeneratedIdDone
-import io.digitalcat.publictransportation.services.identity.api.{ClientRegistrationDone, UserCreationDone}
+import io.digitalcat.publictransportation.services.identity.api.IdentityStateDone
 import play.api.libs.json.{Format, Json}
 
 sealed trait IdentityCommand
@@ -15,8 +15,7 @@ case class RegisterClient(
  username: String,
  password: String
 ) extends PersistentEntity.ReplyType[GeneratedIdDone] with IdentityCommand
-object RegisterClient
-{
+object RegisterClient {
   implicit val format: Format[RegisterClient] = Json.format
 }
 
@@ -26,10 +25,9 @@ case class CreateUser(
  email: String,
  username: String,
  password: String
-) extends PersistentEntity.ReplyType[UserCreationDone] with IdentityCommand
-object CreateUser
-{
+) extends PersistentEntity.ReplyType[GeneratedIdDone] with IdentityCommand
+object CreateUser {
   implicit val format: Format[CreateUser] = Json.format
 }
 
-case class GetRegisteredClient() extends PersistentEntity.ReplyType[ClientRegistrationDone] with IdentityCommand
+case class GetIdentityState() extends PersistentEntity.ReplyType[IdentityStateDone] with IdentityCommand

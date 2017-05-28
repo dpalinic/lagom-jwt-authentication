@@ -10,8 +10,7 @@ object JwtTokenGenerator
   val five_minutes = 5*60
   val one_day = 24*60*60
 
-  def tokenize[C](content: C)(implicit format: Format[C]): Token =
-  {
+  def tokenize[C](content: C)(implicit format: Format[C]): Token = {
     Json.toJson(content).toString()
 
     val authClaim = JwtClaim(Json.toJson(content).toString()).expiresIn(five_minutes).issuedNow
@@ -20,7 +19,10 @@ object JwtTokenGenerator
     val authToken = JwtJson.encode(authClaim, secret, algorithm)
     val refreshToken = JwtJson.encode(refreshClaim, secret, algorithm)
 
-    Token(authToken, refreshToken);
+    Token(
+      authToken = authToken,
+      refreshToken = refreshToken
+    );
   }
 }
 

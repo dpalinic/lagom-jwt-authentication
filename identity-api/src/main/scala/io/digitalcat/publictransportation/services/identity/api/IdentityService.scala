@@ -6,24 +6,43 @@ import com.lightbend.lagom.scaladsl.api.{Service, ServiceCall}
 import play.api.libs.json.{Format, Json}
 import io.digitalcat.publictransportation.services.common.GeneratedIdDone
 
-trait IdentityService extends Service
-{
+trait IdentityService extends Service {
+  def getIdentityState(entityId: String): ServiceCall[NotUsed, IdentityStateDone]
   def registerClient(): ServiceCall[ClientRegistration, GeneratedIdDone]
-  def getRegisteredClient(id: String): ServiceCall[NotUsed, ClientRegistrationDone]
   def loginUser(): ServiceCall[UserLogin, UserLoginDone]
-  def createUser(clientId: String): ServiceCall[UserCreation, UserCreationDone]
+  def createUser(): ServiceCall[UserCreation, GeneratedIdDone]
 
   override final def descriptor = {
     import Service._
     // @formatter:off
     named("identity-service").withCalls(
+      restCall(Method.GET, "/api/state/identity/:entityId", getIdentityState _),
       restCall(Method.POST, "/api/client/registration", registerClient _),
-      restCall(Method.GET, "/api/client/registration/:id", getRegisteredClient _),
       restCall(Method.POST, "/api/user/login", loginUser _),
-      restCall(Method.POST, "/api/client/:clientId/user", createUser _) // TODO: put clientId in token
+      restCall(Method.POST, "/api/user", createUser _)
     ).withAutoAcl(true)
     // @formatter:on
   }
+}
+
+case class IdentityStateDone(
+  id: String,
+  company: String,
+  users: Seq[User]
+)
+object IdentityStateDone {
+  implicit val format: Format[IdentityStateDone] = Json.format
+}
+
+case class User(
+  id: String,
+  firstName: String,
+  lastName: String,
+  email: String,
+  username: String
+)
+object User {
+  implicit val format: Format[User] = Json.format
 }
 
 case class ClientRegistration(
@@ -34,38 +53,23 @@ case class ClientRegistration(
   username: String,
   password: String
 )
-object ClientRegistration
-{
+object ClientRegistration {
   implicit val format: Format[ClientRegistration] = Json.format
 }
 
-case class ClientRegistrationDone(
-  id: String,
-  company: String,
-  users: Seq[UserCreationDone]
-)
-object ClientRegistrationDone
-{
-  implicit val format: Format[ClientRegistrationDone] = Json.format
-}
-
-case class UserLogin
-(
+case class UserLogin (
   username: String,
   password: String
 )
-object UserLogin
-{
+object UserLogin {
   implicit val format: Format[UserLogin] = Json.format
 }
 
-case class UserLoginDone
-(
+case class UserLoginDone (
   authToken: String,
   refreshToken: String
 )
-object UserLoginDone
-{
+object UserLoginDone {
   implicit val format: Format[UserLoginDone] = Json.format
 }
 
@@ -76,19 +80,7 @@ case class UserCreation(
   username: String,
   password: String
 )
-object UserCreation
-{
+object UserCreation {
   implicit val format: Format[UserCreation] = Json.format
 }
 
-case class UserCreationDone(
-  id: String,
-  firstName: String,
-  lastName: String,
-  email: String,
-  username: String
-)
-object UserCreationDone
-{
-  implicit val format: Format[UserCreationDone] = Json.format
-}

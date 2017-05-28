@@ -19,7 +19,9 @@ lazy val `public-transportation-services` = (project in file("."))
 lazy val `common` = (project in file("common"))
   .settings(
     libraryDependencies ++= Seq(
-      lagomScaladslApi
+      lagomScaladslApi,
+      lagomScaladslServer,
+      jwt
     )
   )
 

@@ -4,13 +4,14 @@ import java.util.UUID
 import javax.inject.Inject
 
 import com.lightbend.lagom.scaladsl.api.ServiceCall
+import com.lightbend.lagom.scaladsl.api.transport.Forbidden
 import com.lightbend.lagom.scaladsl.persistence.PersistentEntityRegistry
 import com.lightbend.lagom.scaladsl.persistence.cassandra.{CassandraReadSide, CassandraSession}
-import io.digitalcat.publictransportation.services.common.TokenContent
-import io.digitalcat.publictransportation.services.identity.api.{ClientRegistrationDone, IdentityService, UserLogin, UserLoginDone}
+import com.lightbend.lagom.scaladsl.server.ServerServiceCall
+import io.digitalcat.publictransportation.services.common.authentication.TokenContent
+import io.digitalcat.publictransportation.services.common.authentication.Authentication._
+import io.digitalcat.publictransportation.services.identity.api.{IdentityService, UserLoginDone}
 import io.digitalcat.publictransportation.services.identity.impl.util.{JwtTokenGenerator, SecurePasswordHashing}
-import pdi.jwt.{JwtAlgorithm, JwtClaim, JwtJson}
-import play.api.libs.json.Json
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -26,10 +27,10 @@ class IdentityServiceImpl @Inject()(
     ref.ask(RegisterClient(request.company, request.firstName, request.lastName, request.email, request.username, request.password))
   }
 
-  override def getRegisteredClient(id: String) = ServiceCall { _ =>
+  override def getIdentityState(id: String) = ServiceCall { _ =>
     val ref = persistentRegistry.refFor[IdentityEntity](id)
 
-    ref.ask(GetRegisteredClient())
+    ref.ask(GetIdentityState())
   }
 
   override def loginUser() = ServiceCall { request =>
@@ -37,9 +38,10 @@ class IdentityServiceImpl @Inject()(
       client <- findClientByCredentials(request.username, request.password)
       token = client.map(client => {
         JwtTokenGenerator.tokenize(client)
-      }).orElse(throw new IllegalStateException("User and password combination not found"))
-    } yield {
-        UserLoginDone(token.get.authToken, token.get.refreshToken)
+      }).orElse(throw Forbidden("User and password combination not found"))
+    }
+    yield {
+      UserLoginDone(token.get.authToken, token.get.refreshToken)
     }
 
     result
@@ -49,20 +51,33 @@ class IdentityServiceImpl @Inject()(
     val result = db.selectOne("SELECT id, company_id, username, hashed_password FROM users WHERE username = ? ALLOW FILTERING", username).map {
       case Some(row) => {
         if (SecurePasswordHashing.validatePassword(password, row.getString("hashed_password")))
-          Option(TokenContent(row.getUUID("id").toString, row.getUUID("company_id").toString, row.getString("username")))
+          Option(TokenContent(
+            clientId = row.getUUID("company_id").toString,
+            userId = row.getUUID("id").toString,
+            username = row.getString("username")))
         else
           Option.empty
       }
       case None => Option.empty
     }
     // TODO: remove allow filtering and design schema better
+    // TODO: move to repository and generate TokenContent outside this method
     result
   }
 
-  override def createUser(clientId: String) = ServiceCall { request =>
-    val ref = persistentRegistry.refFor[IdentityEntity](clientId)
+  override def createUser() = authenticated { tokenContent =>
+    ServerServiceCall { request =>
+      val ref = persistentRegistry.refFor[IdentityEntity](tokenContent.clientId)
 
-    ref.ask(CreateUser(request.firstName, request.lastName, request.email, request.username, request.password))
+      ref.ask(
+        CreateUser(
+          firstName = request.firstName,
+          lastName = request.lastName,
+          email = request.email,
+          username = request.username,
+          password = request.password
+        )
+      )
+    }
   }
-
 }
