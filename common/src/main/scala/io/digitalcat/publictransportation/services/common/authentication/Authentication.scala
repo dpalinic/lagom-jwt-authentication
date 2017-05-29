@@ -2,13 +2,14 @@ package io.digitalcat.publictransportation.services.common.authentication
 
 import com.lightbend.lagom.scaladsl.api.transport.Forbidden
 import com.lightbend.lagom.scaladsl.server.ServerServiceCall
+import com.typesafe.config.ConfigFactory
 import pdi.jwt.{Jwt, JwtAlgorithm, JwtJson}
 import play.api.libs.json._
 
 import scala.util.{Failure, Success}
 
 object Authentication {
-  val secret = "4jkdgf4JHF38/385kjghs#$#(-.gdgk4498Q(gjgh3/3jhgdf,.,24#%8953+'8GJA3gsjjd3598#%(/$.,-Kjg#%$#64jhgskghja"
+  val secret = ConfigFactory.load().getString("jwt.secret")
   val algorithm = JwtAlgorithm.HS512
 
   def authenticated[Request, Response](serviceCall: TokenContent => ServerServiceCall[Request, Response]) =
@@ -24,11 +25,11 @@ object Authentication {
       }
     }
 
-  private def sanitizeToken(header: String): String = header.replaceFirst("Bearer ", "")
+  private def sanitizeToken(header: String) = header.replaceFirst("Bearer ", "")
 
   private def validateToken(token: String) = Jwt.isValid(token, secret, Seq(algorithm))
 
-  private def decodeToken(token: String): TokenContent = {
+  private def decodeToken(token: String) = {
     val jsonTokenContent = JwtJson.decode(token, secret, Seq(algorithm))
 
     jsonTokenContent match {

@@ -1,10 +1,11 @@
 package io.digitalcat.publictransportation.services.identity.impl.util
 
+import com.typesafe.config.ConfigFactory
 import pdi.jwt.{JwtAlgorithm, JwtClaim, JwtJson}
 import play.api.libs.json.{Format, Json}
 
 object JwtTokenUtil {
-  val secret = "4jkdgf4JHF38/385kjghs#$#(-.gdgk4498Q(gjgh3/3jhgdf,.,24#%8953+'8GJA3gsjjd3598#%(/$.,-Kjg#%$#64jhgskghja"
+  val secret = ConfigFactory.load().getString("jwt.secret")
   val algorithm = JwtAlgorithm.HS512
   val five_minutes = 5*60
   val one_day = 24*60*60

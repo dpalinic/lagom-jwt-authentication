@@ -24,7 +24,16 @@ class IdentityServiceImpl @Inject()(
   override def registerClient() = ServiceCall { request =>
     val ref = persistentRegistry.refFor[IdentityEntity](UUID.randomUUID().toString)
 
-    ref.ask(RegisterClient(request.company, request.firstName, request.lastName, request.email, request.username, request.password))
+    ref.ask(
+      RegisterClient(
+        company = request.company,
+        firstName = request.firstName,
+        lastName = request.lastName,
+        email = request.email,
+        username = request.username,
+        password = request.password
+      )
+    )
   }
 
   override def getIdentityState(id: String) = ServiceCall { _ =>

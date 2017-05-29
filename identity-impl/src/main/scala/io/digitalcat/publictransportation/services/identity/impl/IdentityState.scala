@@ -16,15 +16,16 @@ object IdentityState {
 }
 
 case class Client(
- name: String,
- users: Seq[User] = Seq.empty
+  id: String,
+  company: String,
+  users: Seq[User] = Seq.empty
 )
 object Client {
   implicit val format: Format[Client] = Json.format
 }
 
 case class User(
-  userId: String,
+  id: String,
   firstName: String,
   lastName: String,
   email: String,

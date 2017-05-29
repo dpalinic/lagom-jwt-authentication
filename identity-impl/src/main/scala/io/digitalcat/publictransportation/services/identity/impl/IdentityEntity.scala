@@ -31,7 +31,14 @@ class IdentityEntity extends PersistentEntity {
 
               ctx.thenPersistAll(
                 ClientCreated(company),
-                UserCreated(userId, firstName, lastName, username, email, hashedPassword)
+                UserCreated(
+                  userId = userId,
+                  firstName = firstName,
+                  lastName = lastName,
+                  email = email,
+                  username = username,
+                  hashedPassword = hashedPassword
+                )
               ) { () =>
                 ctx.reply(GeneratedIdDone(entityId))
               }
@@ -44,7 +51,16 @@ class IdentityEntity extends PersistentEntity {
               val hashedPassword = SecurePasswordHashing.hashPassword(password)
               val userId = UUID.randomUUID().toString
 
-              ctx.thenPersist(UserCreated(userId, firstName, lastName, email, username, hashedPassword)) { _ =>
+              ctx.thenPersist(
+                UserCreated(
+                  userId = userId,
+                  firstName = firstName,
+                  lastName = lastName,
+                  email = email,
+                  username = username,
+                  hashedPassword = hashedPassword
+                )
+              ) { _ =>
                 ctx.reply(GeneratedIdDone(userId))
               }
             case None =>
@@ -56,15 +72,15 @@ class IdentityEntity extends PersistentEntity {
         case (GetIdentityState(), ctx, state) =>
           state.client match {
             case None =>
-              throw new NotFound(TransportErrorCode.BadRequest, new ExceptionMessage(s"Client registered with ${entityId} can't be found", ""))
+              ctx.invalidCommand(s"Client registered with ${entityId} can't be found")
             case Some(client: Client) =>
               ctx.reply(
                 IdentityStateDone(
-                  entityId,
-                  client.name,
-                  client.users.map(user =>
+                  id = entityId,
+                  company = client.company,
+                  users = client.users.map(user =>
                     ResponseUser(
-                      id = user.userId,
+                      id = user.id,
                       firstName = user.firstName,
                       lastName = user.lastName,
                       email = user.email,
@@ -76,8 +92,19 @@ class IdentityEntity extends PersistentEntity {
           }
       }
       .onEvent {
-        case (ClientCreated(company), _) => IdentityState(Some(Client(company)))
-        case (UserCreated(userId, firstName, lastName, username, email, password), state) => state.addUser(User(userId, firstName, lastName, username, email, password))
+        case (ClientCreated(company), _) => IdentityState(Some(Client(id = entityId, company = company)))
+        case (UserCreated(userId, firstName, lastName, username, email, password), state) => {
+          state.addUser(
+            User(
+              id = userId,
+              firstName = firstName,
+              lastName = lastName,
+              username = username,
+              email = email,
+              password = password
+            )
+          )
+        }
       }
   }
 
