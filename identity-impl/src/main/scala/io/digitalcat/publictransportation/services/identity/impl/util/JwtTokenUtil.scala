@@ -3,8 +3,7 @@ package io.digitalcat.publictransportation.services.identity.impl.util
 import pdi.jwt.{JwtAlgorithm, JwtClaim, JwtJson}
 import play.api.libs.json.{Format, Json}
 
-object JwtTokenGenerator
-{
+object JwtTokenUtil {
   val secret = "4jkdgf4JHF38/385kjghs#$#(-.gdgk4498Q(gjgh3/3jhgdf,.,24#%8953+'8GJA3gsjjd3598#%(/$.,-Kjg#%$#64jhgskghja"
   val algorithm = JwtAlgorithm.HS512
   val five_minutes = 5*60
@@ -22,12 +21,11 @@ object JwtTokenGenerator
     Token(
       authToken = authToken,
       refreshToken = refreshToken
-    );
+    )
   }
 }
 
 case class Token(authToken: String, refreshToken: String)
-object Token
-{
+object Token {
   implicit val format: Format[Token] = Json.format
 }

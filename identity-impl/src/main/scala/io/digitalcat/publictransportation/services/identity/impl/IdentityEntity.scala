@@ -5,8 +5,8 @@ import java.util.UUID
 import com.lightbend.lagom.scaladsl.api.transport.{ExceptionMessage, NotFound, TransportErrorCode}
 import com.lightbend.lagom.scaladsl.persistence.PersistentEntity
 import com.lightbend.lagom.scaladsl.playjson.{JsonSerializer, JsonSerializerRegistry}
-import io.digitalcat.publictransportation.services.common.GeneratedIdDone
-import io.digitalcat.publictransportation.services.identity.api.{IdentityStateDone, User => ResponseUser, UserLogin, UserLoginDone}
+import io.digitalcat.publictransportation.services.common.response.GeneratedIdDone
+import io.digitalcat.publictransportation.services.identity.api.{IdentityStateDone, UserLogin, UserLoginDone, User => ResponseUser}
 import io.digitalcat.publictransportation.services.identity.impl.util.{SecurePasswordHashing, Token}
 
 import scala.collection.immutable.Seq

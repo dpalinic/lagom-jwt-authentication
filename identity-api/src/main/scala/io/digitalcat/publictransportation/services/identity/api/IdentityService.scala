@@ -1,10 +1,10 @@
 package io.digitalcat.publictransportation.services.identity.api
 
-import akka.{NotUsed}
+import akka.NotUsed
 import com.lightbend.lagom.scaladsl.api.transport.Method
 import com.lightbend.lagom.scaladsl.api.{Service, ServiceCall}
+import io.digitalcat.publictransportation.services.common.response.GeneratedIdDone
 import play.api.libs.json.{Format, Json}
-import io.digitalcat.publictransportation.services.common.GeneratedIdDone
 
 trait IdentityService extends Service {
   def getIdentityState(entityId: String): ServiceCall[NotUsed, IdentityStateDone]

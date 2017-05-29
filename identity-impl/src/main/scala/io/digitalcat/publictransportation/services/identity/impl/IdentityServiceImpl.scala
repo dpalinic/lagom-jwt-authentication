@@ -11,7 +11,7 @@ import com.lightbend.lagom.scaladsl.server.ServerServiceCall
 import io.digitalcat.publictransportation.services.common.authentication.TokenContent
 import io.digitalcat.publictransportation.services.common.authentication.Authentication._
 import io.digitalcat.publictransportation.services.identity.api.{IdentityService, UserLoginDone}
-import io.digitalcat.publictransportation.services.identity.impl.util.{JwtTokenGenerator, SecurePasswordHashing}
+import io.digitalcat.publictransportation.services.identity.impl.util.{JwtTokenUtil, SecurePasswordHashing}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -37,7 +37,7 @@ class IdentityServiceImpl @Inject()(
     val result: Future[UserLoginDone] = for {
       client <- findClientByCredentials(request.username, request.password)
       token = client.map(client => {
-        JwtTokenGenerator.tokenize(client)
+        JwtTokenUtil.tokenize(client)
       }).orElse(throw Forbidden("User and password combination not found"))
     }
     yield {
