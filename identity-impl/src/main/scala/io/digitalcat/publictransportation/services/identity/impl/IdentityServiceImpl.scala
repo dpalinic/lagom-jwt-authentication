@@ -48,7 +48,7 @@ class IdentityServiceImpl @Inject()(
 
       token = maybeUser.filter(user => passwordMatches(request.password, user.hashedPassword))
         .map(user =>
-            TokenContent(
+          TokenContent(
             clientId = user.clientId,
             userId = user.id,
             username = user.username
@@ -64,7 +64,7 @@ class IdentityServiceImpl @Inject()(
 
   override def createUser() = authenticated { tokenContent =>
     ServerServiceCall { request =>
-      val ref = persistentRegistry.refFor[IdentityEntity](tokenContent.clientId)
+      val ref = persistentRegistry.refFor[IdentityEntity](tokenContent.clientId.toString)
 
       ref.ask(
         CreateUser(

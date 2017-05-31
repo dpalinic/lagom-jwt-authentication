@@ -1,7 +1,10 @@
 package io.digitalcat.publictransportation.services.identity.impl
 
+import java.util.UUID
 import javax.inject.Inject
+
 import com.lightbend.lagom.scaladsl.persistence.cassandra.CassandraSession
+
 import scala.concurrent.{ExecutionContext, Future}
 
 class IdentityRepository @Inject()(db: CassandraSession)(implicit ec: ExecutionContext) {
@@ -10,8 +13,8 @@ class IdentityRepository @Inject()(db: CassandraSession)(implicit ec: ExecutionC
       case Some(row) => Option(
         UserByUsername(
           username = row.getString("username"),
-          id = row.getUUID("id").toString,
-          clientId = row.getUUID("client_id").toString,
+          id = row.getUUID("id"),
+          clientId = row.getUUID("client_id"),
           hashedPassword = row.getString("hashed_password")
         )
       )
@@ -22,4 +25,4 @@ class IdentityRepository @Inject()(db: CassandraSession)(implicit ec: ExecutionC
   }
 }
 
-case class UserByUsername(username: String, id: String, clientId: String, hashedPassword: String)
+case class UserByUsername(username: String, id: UUID, clientId: UUID, hashedPassword: String)

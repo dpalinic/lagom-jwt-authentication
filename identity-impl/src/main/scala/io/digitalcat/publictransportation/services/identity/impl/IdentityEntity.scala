@@ -28,7 +28,7 @@ class IdentityEntity extends PersistentEntity {
               ctx.done
             case None =>
               val hashedPassword = SecurePasswordHashing.hashPassword(password)
-              val userId = UUID.randomUUID().toString
+              val userId = UUID.randomUUID()
 
               ctx.thenPersistAll(
                 ClientCreated(company),
@@ -50,7 +50,7 @@ class IdentityEntity extends PersistentEntity {
           state.client match {
             case Some(_) =>
               val hashedPassword = SecurePasswordHashing.hashPassword(password)
-              val userId = UUID.randomUUID().toString
+              val userId = UUID.randomUUID()
 
               ctx.thenPersist(
                 UserCreated(
@@ -62,7 +62,7 @@ class IdentityEntity extends PersistentEntity {
                   hashedPassword = hashedPassword
                 )
               ) { _ =>
-                ctx.reply(GeneratedIdDone(userId))
+                ctx.reply(GeneratedIdDone(userId.toString))
               }
             case None =>
               ctx.invalidCommand(s"Client ${entityId} not found")
@@ -81,7 +81,7 @@ class IdentityEntity extends PersistentEntity {
                   company = client.company,
                   users = client.users.map(user =>
                     ResponseUser(
-                      id = user.id,
+                      id = user.id.toString,
                       firstName = user.firstName,
                       lastName = user.lastName,
                       email = user.email,
@@ -93,7 +93,7 @@ class IdentityEntity extends PersistentEntity {
           }
       }
       .onEvent {
-        case (ClientCreated(company), _) => IdentityState(Some(Client(id = entityId, company = company)))
+        case (ClientCreated(company), _) => IdentityState(Some(Client(id = UUID.fromString(entityId), company = company)))
         case (UserCreated(userId, firstName, lastName, username, email, password), state) => {
           state.addUser(
             User(

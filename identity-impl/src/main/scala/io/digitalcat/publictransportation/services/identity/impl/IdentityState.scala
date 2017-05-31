@@ -1,5 +1,7 @@
 package io.digitalcat.publictransportation.services.identity.impl
 
+import java.util.UUID
+
 import play.api.libs.json.{Format, Json}
 
 
@@ -16,7 +18,7 @@ object IdentityState {
 }
 
 case class Client(
-  id: String,
+  id: UUID,
   company: String,
   users: Seq[User] = Seq.empty
 )
@@ -25,7 +27,7 @@ object Client {
 }
 
 case class User(
-  id: String,
+  id: UUID,
   firstName: String,
   lastName: String,
   email: String,
