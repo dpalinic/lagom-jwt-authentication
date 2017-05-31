@@ -35,6 +35,9 @@ abstract class IdentityApplication(context: LagomApplicationContext)
   // Register the JSON serializer registry
   override lazy val jsonSerializerRegistry = IdentitySerializerRegistry
 
+  // Register dependencies
+  lazy val identityRepository = wire[IdentityRepository]
+
   // Register the public-transportation-services persistent entity
   persistentEntityRegistry.register(wire[IdentityEntity])
 

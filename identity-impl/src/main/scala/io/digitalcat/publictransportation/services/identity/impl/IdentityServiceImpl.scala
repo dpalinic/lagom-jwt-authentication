@@ -6,19 +6,17 @@ import javax.inject.Inject
 import com.lightbend.lagom.scaladsl.api.ServiceCall
 import com.lightbend.lagom.scaladsl.api.transport.Forbidden
 import com.lightbend.lagom.scaladsl.persistence.PersistentEntityRegistry
-import com.lightbend.lagom.scaladsl.persistence.cassandra.{CassandraReadSide, CassandraSession}
 import com.lightbend.lagom.scaladsl.server.ServerServiceCall
-import io.digitalcat.publictransportation.services.common.authentication.TokenContent
 import io.digitalcat.publictransportation.services.common.authentication.Authentication._
+import io.digitalcat.publictransportation.services.common.authentication.TokenContent
 import io.digitalcat.publictransportation.services.identity.api.{IdentityService, UserLoginDone}
 import io.digitalcat.publictransportation.services.identity.impl.util.{JwtTokenUtil, SecurePasswordHashing}
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 class IdentityServiceImpl @Inject()(
- persistentRegistry: PersistentEntityRegistry,
- readSide: CassandraReadSide,
- db: CassandraSession
+  persistentRegistry: PersistentEntityRegistry,
+  identityRepository: IdentityRepository
 )(implicit ec: ExecutionContext) extends IdentityService
 {
   override def registerClient() = ServiceCall { request =>
@@ -43,35 +41,25 @@ class IdentityServiceImpl @Inject()(
   }
 
   override def loginUser() = ServiceCall { request =>
-    val result: Future[UserLoginDone] = for {
-      client <- findClientByCredentials(request.username, request.password)
-      token = client.map(client => {
-        JwtTokenUtil.tokenize(client)
-      }).orElse(throw Forbidden("User and password combination not found"))
+    def passwordMatches(providedPassword: String, storedHashedPassword: String) = SecurePasswordHashing.validatePassword(providedPassword, storedHashedPassword)
+
+    for {
+      maybeUser <- identityRepository.findUserByCredentials(request.username)
+
+      token = maybeUser.filter(user => passwordMatches(request.password, user.hashedPassword))
+        .map(user =>
+            TokenContent(
+            clientId = user.clientId,
+            userId = user.id,
+            username = user.username
+          )
+        )
+        .map(tokenContent => JwtTokenUtil.tokenize(tokenContent))
+        .getOrElse(throw Forbidden("User and password combination not found"))
     }
     yield {
-      UserLoginDone(token.get.authToken, token.get.refreshToken)
+      UserLoginDone(token.authToken, token.refreshToken)
     }
-
-    result
-  }
-
-  private def findClientByCredentials(username: String, password: String): Future[Option[TokenContent]] = {
-    val result = db.selectOne("SELECT id, company_id, username, hashed_password FROM users WHERE username = ? ALLOW FILTERING", username).map {
-      case Some(row) => {
-        if (SecurePasswordHashing.validatePassword(password, row.getString("hashed_password")))
-          Option(TokenContent(
-            clientId = row.getUUID("company_id").toString,
-            userId = row.getUUID("id").toString,
-            username = row.getString("username")))
-        else
-          Option.empty
-      }
-      case None => Option.empty
-    }
-    // TODO: remove allow filtering and design schema better
-    // TODO: move to repository and generate TokenContent outside this method
-    result
   }
 
   override def createUser() = authenticated { tokenContent =>

@@ -2,7 +2,6 @@ package io.digitalcat.publictransportation.services.identity.impl
 
 import java.util.UUID
 
-import com.lightbend.lagom.scaladsl.api.transport.{ExceptionMessage, NotFound, TransportErrorCode}
 import com.lightbend.lagom.scaladsl.persistence.PersistentEntity
 import com.lightbend.lagom.scaladsl.playjson.{JsonSerializer, JsonSerializerRegistry}
 import io.digitalcat.publictransportation.services.common.response.GeneratedIdDone
@@ -20,15 +19,9 @@ class IdentityEntity extends PersistentEntity {
   override def initialState: IdentityState = IdentityState(None)
 
   override def behavior: Behavior = {
-    registerClientBehavior()
-    registerUserBehavior()
-    registerStateBehavior()
-  }
-
-  private def registerClientBehavior() = {
     Actions()
       .onCommand[RegisterClient, GeneratedIdDone] {
-        case (RegisterClient(company, firstName, lastName, username, email, password), ctx, state) =>
+        case (RegisterClient(company, firstName, lastName, email, username, password), ctx, state) =>
           state.client match {
             case Some(_) =>
               ctx.invalidCommand(s"User ${entityId} is already registered") // TODO: fix check if user exists (this implementation is wrong)
@@ -52,13 +45,6 @@ class IdentityEntity extends PersistentEntity {
               }
           }
       }
-      .onEvent {
-        case (ClientCreated(company), _) => IdentityState(Some(Client(id = entityId, company = company)))
-      }
-  }
-
-  private def registerUserBehavior() = {
-    Actions()
       .onCommand[CreateUser, GeneratedIdDone] {
         case (CreateUser(firstName, lastName, email, username, password), ctx, state) =>
           state.client match {
@@ -83,24 +69,6 @@ class IdentityEntity extends PersistentEntity {
               ctx.done
           }
       }
-      .onEvent {
-        case (UserCreated(userId, firstName, lastName, username, email, password), state) => {
-          state.addUser(
-            User(
-              id = userId,
-              firstName = firstName,
-              lastName = lastName,
-              username = username,
-              email = email,
-              password = password
-            )
-          )
-        }
-      }
-  }
-
-  private def registerStateBehavior() = {
-    Actions()
       .onReadOnlyCommand[GetIdentityState, IdentityStateDone] {
         case (GetIdentityState(), ctx, state) =>
           state.client match {
@@ -123,6 +91,21 @@ class IdentityEntity extends PersistentEntity {
                 )
               )
           }
+      }
+      .onEvent {
+        case (ClientCreated(company), _) => IdentityState(Some(Client(id = entityId, company = company)))
+        case (UserCreated(userId, firstName, lastName, username, email, password), state) => {
+          state.addUser(
+            User(
+              id = userId,
+              firstName = firstName,
+              lastName = lastName,
+              username = username,
+              email = email,
+              password = password
+            )
+          )
+        }
       }
   }
 }
