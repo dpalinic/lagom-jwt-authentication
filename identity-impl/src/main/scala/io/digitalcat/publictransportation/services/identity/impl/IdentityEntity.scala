@@ -24,7 +24,7 @@ class IdentityEntity extends PersistentEntity {
         case (RegisterClient(company, firstName, lastName, email, username, password), ctx, state) =>
           state.client match {
             case Some(_) =>
-              ctx.invalidCommand(s"User ${entityId} is already registered") // TODO: fix check if user exists (this implementation is wrong)
+              ctx.invalidCommand(s"Client with id ${entityId} is already registered")
               ctx.done
             case None =>
               val hashedPassword = SecurePasswordHashing.hashPassword(password)
@@ -65,7 +65,7 @@ class IdentityEntity extends PersistentEntity {
                 ctx.reply(GeneratedIdDone(userId.toString))
               }
             case None =>
-              ctx.invalidCommand(s"Client ${entityId} not found")
+              ctx.invalidCommand(s"Client with id ${entityId} not found")
               ctx.done
           }
       }

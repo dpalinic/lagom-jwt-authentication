@@ -18,10 +18,11 @@ object Authentication {
         .map(header => sanitizeToken(header))
         .filter(rawToken => validateToken(rawToken))
         .map(rawToken => decodeToken(rawToken))
+        .filter(tokenContent => isAuthToken(tokenContent))
 
       tokenContent match {
         case Some(tokenContent) => serviceCall(tokenContent)
-        case _ => throw Forbidden("User must be authenticated to access this service call")
+        case _ => throw Forbidden("Authorization token is invalid")
       }
     }
 
@@ -37,4 +38,7 @@ object Authentication {
       case Failure(_) => throw Forbidden(s"Unable to decode token")
     }
   }
+
+  private def isAuthToken(tokenContent: TokenContent) = !tokenContent.isRefreshToken
+
 }
