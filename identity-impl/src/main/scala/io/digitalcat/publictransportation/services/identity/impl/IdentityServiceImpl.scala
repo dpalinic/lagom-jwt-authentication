@@ -3,16 +3,17 @@ package io.digitalcat.publictransportation.services.identity.impl
 import java.util.UUID
 import javax.inject.Inject
 
+import akka.NotUsed
 import com.lightbend.lagom.scaladsl.api.ServiceCall
 import com.lightbend.lagom.scaladsl.api.transport.Forbidden
 import com.lightbend.lagom.scaladsl.persistence.PersistentEntityRegistry
 import com.lightbend.lagom.scaladsl.server.ServerServiceCall
 import io.digitalcat.publictransportation.services.common.authentication.Authentication._
 import io.digitalcat.publictransportation.services.common.authentication.TokenContent
-import io.digitalcat.publictransportation.services.identity.api.{IdentityService, UserLoginDone}
+import io.digitalcat.publictransportation.services.identity.api.{IdentityService, TokenRefreshDone, UserLoginDone}
 import io.digitalcat.publictransportation.services.identity.impl.util.{JwtTokenUtil, SecurePasswordHashing}
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 class IdentityServiceImpl @Inject()(
   persistentRegistry: PersistentEntityRegistry,
@@ -34,10 +35,12 @@ class IdentityServiceImpl @Inject()(
     )
   }
 
-  override def getIdentityState(id: String) = ServiceCall { _ =>
-    val ref = persistentRegistry.refFor[IdentityEntity](id)
+  override def getIdentityState() = authenticated { tokenContent =>
+    ServerServiceCall { _ =>
+      val ref = persistentRegistry.refFor[IdentityEntity](tokenContent.clientId.toString)
 
-    ref.ask(GetIdentityState())
+      ref.ask(GetIdentityState())
+    }
   }
 
   override def loginUser() = ServiceCall { request =>
@@ -54,11 +57,19 @@ class IdentityServiceImpl @Inject()(
             username = user.username
           )
         )
-        .map(tokenContent => JwtTokenUtil.tokenize(tokenContent))
-        .getOrElse(throw Forbidden("User and password combination not found"))
+        .map(tokenContent => JwtTokenUtil.generateTokens(tokenContent))
+        .getOrElse(throw Forbidden("Username and password combination not found"))
     }
     yield {
-      UserLoginDone(token.authToken, token.refreshToken)
+      UserLoginDone(token.authToken, token.refreshToken.getOrElse(""))
+    }
+  }
+
+  override def refreshToken() = authenticatedWithRefreshToken { tokenContent =>
+    ServerServiceCall { _ =>
+      val token = JwtTokenUtil.generateAuthTokenOnly(tokenContent)
+
+      Future.successful(TokenRefreshDone(token.authToken))
     }
   }
 

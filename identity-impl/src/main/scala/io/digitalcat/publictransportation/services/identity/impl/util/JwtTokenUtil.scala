@@ -7,11 +7,11 @@ import play.api.libs.json.{Format, Json}
 
 object JwtTokenUtil {
   val secret = ConfigFactory.load().getString("jwt.secret")
-  val algorithm = JwtAlgorithm.HS512
   val authExpiration = ConfigFactory.load().getInt("jwt.token.auth.expirationInSeconds")
   val refreshExpiration = ConfigFactory.load().getInt("jwt.token.refresh.expirationInSeconds")
+  val algorithm = JwtAlgorithm.HS512
 
-  def tokenize(content: TokenContent)(implicit format: Format[TokenContent]): Token = {
+  def generateTokens(content: TokenContent)(implicit format: Format[TokenContent]): Token = {
     val authClaim = JwtClaim(Json.toJson(content).toString())
       .expiresIn(authExpiration)
       .issuedNow
@@ -25,12 +25,25 @@ object JwtTokenUtil {
 
     Token(
       authToken = authToken,
-      refreshToken = refreshToken
+      refreshToken = Some(refreshToken)
+    )
+  }
+
+  def generateAuthTokenOnly(content: TokenContent)(implicit format: Format[TokenContent]): Token = {
+    val authClaim = JwtClaim(Json.toJson(content).toString())
+      .expiresIn(authExpiration)
+      .issuedNow
+
+    val authToken = JwtJson.encode(authClaim, secret, algorithm)
+
+    Token(
+      authToken = authToken,
+      None
     )
   }
 }
 
-case class Token(authToken: String, refreshToken: String)
+case class Token(authToken: String, refreshToken: Option[String])
 object Token {
   implicit val format: Format[Token] = Json.format
 }
