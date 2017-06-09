@@ -7,8 +7,8 @@ import com.lightbend.lagom.scaladsl.persistence.cassandra.CassandraSession
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class IdentityRepository @Inject()(db: CassandraSession)(implicit ec: ExecutionContext) {
-  def findUserByCredentials(username: String): Future[Option[UserByUsername]] = {
+class IdentityRepository(db: CassandraSession)(implicit ec: ExecutionContext) {
+  def findUserByUsername(username: String): Future[Option[UserByUsername]] = {
     val result = db.selectOne("SELECT id, client_id, username, hashed_password FROM users_by_username WHERE username = ?", username).map {
       case Some(row) => Option(
         UserByUsername(

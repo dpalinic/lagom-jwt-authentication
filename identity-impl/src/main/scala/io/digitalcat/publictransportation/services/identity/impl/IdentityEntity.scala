@@ -94,7 +94,7 @@ class IdentityEntity extends PersistentEntity {
       }
       .onEvent {
         case (ClientCreated(company), _) => IdentityState(Some(Client(id = UUID.fromString(entityId), company = company)))
-        case (UserCreated(userId, firstName, lastName, username, email, password), state) => {
+        case (UserCreated(userId, firstName, lastName, email, username, password), state) => {
           state.addUser(
             User(
               id = userId,

@@ -1,9 +1,7 @@
 package io.digitalcat.publictransportation.services.identity.impl
 
 import java.util.UUID
-import javax.inject.Inject
 
-import akka.NotUsed
 import com.lightbend.lagom.scaladsl.api.ServiceCall
 import com.lightbend.lagom.scaladsl.api.transport.Forbidden
 import com.lightbend.lagom.scaladsl.persistence.PersistentEntityRegistry
@@ -15,7 +13,7 @@ import io.digitalcat.publictransportation.services.identity.impl.util.{JwtTokenU
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class IdentityServiceImpl @Inject()(
+class IdentityServiceImpl(
   persistentRegistry: PersistentEntityRegistry,
   identityRepository: IdentityRepository
 )(implicit ec: ExecutionContext) extends IdentityService
@@ -47,7 +45,7 @@ class IdentityServiceImpl @Inject()(
     def passwordMatches(providedPassword: String, storedHashedPassword: String) = SecurePasswordHashing.validatePassword(providedPassword, storedHashedPassword)
 
     for {
-      maybeUser <- identityRepository.findUserByCredentials(request.username)
+      maybeUser <- identityRepository.findUserByUsername(request.username)
 
       token = maybeUser.filter(user => passwordMatches(request.password, user.hashedPassword))
         .map(user =>
@@ -61,7 +59,7 @@ class IdentityServiceImpl @Inject()(
         .getOrElse(throw Forbidden("Username and password combination not found"))
     }
     yield {
-      UserLoginDone(token.authToken, token.refreshToken.getOrElse(""))
+      UserLoginDone(token.authToken, token.refreshToken.getOrElse(throw new IllegalStateException("Refresh token missing")))
     }
   }
 
