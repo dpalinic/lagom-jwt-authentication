@@ -73,6 +73,14 @@ class IdentityServiceImpl(
 
   override def createUser() = authenticated { tokenContent =>
     ServerServiceCall { request =>
+
+      // TODO: Username and Email validation
+      // Reserve username
+      // Reserve email
+      // Check if both items where reserved
+      // If yes, call CreateUser command
+      // Otherwise throw exception
+
       val ref = persistentRegistry.refFor[IdentityEntity](tokenContent.clientId.toString)
 
       ref.ask(

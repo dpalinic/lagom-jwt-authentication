@@ -28,22 +28,28 @@ class IdentityEventProcessor(session: CassandraSession, readSide: CassandraReadS
 
   private def createTable(): Future[Done] = {
     session.executeCreateTable("""
-      CREATE TABLE IF NOT EXISTS users_by_username (
-        username        varchar,
+      CREATE TABLE IF NOT EXISTS users (
         id              uuid,
         client_id       uuid,
+        username        varchar,
+        email           varchar,
         first_name      varchar,
         last_name       varchar,
-        email           varchar,
-        hashed_password varchar, PRIMARY KEY (username)
-      )
+        hashed_password varchar, PRIMARY KEY (id)
+      );
+    """)
+    session.executeCreateTable("""
+      CREATE MATERIALIZED VIEW IF NOT EXISTS users_by_username AS
+       SELECT * FROM users
+       WHERE username IS NOT NULL
+       PRIMARY KEY (username, id)
     """)
   }
 
 
   private def prepareStatements(): Future[Done] = {
     for {
-      insert <- session.prepare("INSERT INTO users_by_username(username, id, client_id, first_name, last_name, email, hashed_password) VALUES (?, ?, ?, ?, ?, ?, ?)")
+      insert <- session.prepare("INSERT INTO users(id, client_id, username, email, first_name, last_name, hashed_password) VALUES (?, ?, ?, ?, ?, ?, ?)")
     } yield {
       insertUserStatement = insert
       Done
@@ -54,12 +60,12 @@ class IdentityEventProcessor(session: CassandraSession, readSide: CassandraReadS
     Future.successful(
       List(
         insertUserStatement.bind(
-          user.event.username,
           user.event.userId,
           UUID.fromString(user.entityId),
+          user.event.username,
+          user.event.email,
           user.event.firstName,
           user.event.lastName,
-          user.event.email,
           user.event.hashedPassword
         )
       )
