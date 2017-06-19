@@ -15,7 +15,6 @@ class IdentityEventProcessor(session: CassandraSession, readSide: CassandraReadS
 
   override def buildHandler(): ReadSideHandler[IdentityEvent] = {
     readSide.builder[IdentityEvent]("identityEventOffset")
-      .setGlobalPrepare(createTable)
       .setPrepare { tag =>
         prepareStatements()
       }.setEventHandler[UserCreated](insertUser)
@@ -25,27 +24,6 @@ class IdentityEventProcessor(session: CassandraSession, readSide: CassandraReadS
   override def aggregateTags: Set[AggregateEventTag[IdentityEvent]] = {
     IdentityEvent.Tag.allTags
   }
-
-  private def createTable(): Future[Done] = {
-    session.executeCreateTable("""
-      CREATE TABLE IF NOT EXISTS users (
-        id              uuid,
-        client_id       uuid,
-        username        varchar,
-        email           varchar,
-        first_name      varchar,
-        last_name       varchar,
-        hashed_password varchar, PRIMARY KEY (id)
-      );
-    """)
-    session.executeCreateTable("""
-      CREATE MATERIALIZED VIEW IF NOT EXISTS users_by_username AS
-       SELECT * FROM users
-       WHERE username IS NOT NULL
-       PRIMARY KEY (username, id)
-    """)
-  }
-
 
   private def prepareStatements(): Future[Done] = {
     for {

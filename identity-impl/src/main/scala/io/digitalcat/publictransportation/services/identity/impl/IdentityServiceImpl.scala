@@ -3,15 +3,17 @@ package io.digitalcat.publictransportation.services.identity.impl
 import java.util.UUID
 
 import com.lightbend.lagom.scaladsl.api.ServiceCall
-import com.lightbend.lagom.scaladsl.api.transport.Forbidden
+import com.lightbend.lagom.scaladsl.api.transport.{BadRequest, Forbidden}
 import com.lightbend.lagom.scaladsl.persistence.PersistentEntityRegistry
 import com.lightbend.lagom.scaladsl.server.ServerServiceCall
 import io.digitalcat.publictransportation.services.common.authentication.Authentication._
 import io.digitalcat.publictransportation.services.common.authentication.TokenContent
+import io.digitalcat.publictransportation.services.common.response.GeneratedIdDone
 import io.digitalcat.publictransportation.services.identity.api.{IdentityService, TokenRefreshDone, UserLoginDone}
 import io.digitalcat.publictransportation.services.identity.impl.util.{JwtTokenUtil, SecurePasswordHashing}
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success}
 
 class IdentityServiceImpl(
   persistentRegistry: PersistentEntityRegistry,
@@ -74,24 +76,32 @@ class IdentityServiceImpl(
   override def createUser() = authenticated { tokenContent =>
     ServerServiceCall { request =>
 
-      // TODO: Username and Email validation
-      // Reserve username
-      // Reserve email
-      // Check if both items where reserved
-      // If yes, call CreateUser command
-      // Otherwise throw exception
+      val canProceed = for {
+        userReserved <- identityRepository.reserveUsername(request.username)
+        emailReserved <- identityRepository.reserveEmail(request.email)
+      }
+      yield userReserved && emailReserved
 
-      val ref = persistentRegistry.refFor[IdentityEntity](tokenContent.clientId.toString)
+      val result = canProceed.flatMap(canProceed => {
+        canProceed match {
+          case true => {
+              val ref = persistentRegistry.refFor[IdentityEntity](tokenContent.clientId.toString)
 
-      ref.ask(
-        CreateUser(
-          firstName = request.firstName,
-          lastName = request.lastName,
-          email = request.email,
-          username = request.username,
-          password = request.password
-        )
-      )
+              ref.ask(
+              CreateUser(
+              firstName = request.firstName,
+              lastName = request.lastName,
+              email = request.email,
+              username = request.username,
+              password = request.password
+              )
+            )
+          }
+          case false => throw BadRequest("Either username or email is already taken.")
+        }
+      })
+
+      result
     }
   }
 }
