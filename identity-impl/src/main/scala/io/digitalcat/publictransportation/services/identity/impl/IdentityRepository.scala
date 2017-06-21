@@ -2,7 +2,6 @@ package io.digitalcat.publictransportation.services.identity.impl
 
 import java.util.UUID
 
-import com.datastax.driver.core.PreparedStatement
 import com.lightbend.lagom.scaladsl.persistence.cassandra.CassandraSession
 
 import scala.concurrent.{ExecutionContext, Future}
