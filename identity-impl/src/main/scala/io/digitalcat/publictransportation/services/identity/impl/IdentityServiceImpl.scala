@@ -6,14 +6,15 @@ import com.lightbend.lagom.scaladsl.api.ServiceCall
 import com.lightbend.lagom.scaladsl.api.transport.{BadRequest, Forbidden}
 import com.lightbend.lagom.scaladsl.persistence.PersistentEntityRegistry
 import com.lightbend.lagom.scaladsl.server.ServerServiceCall
-import io.digitalcat.publictransportation.services.common.authentication.Authentication._
+import io.digitalcat.publictransportation.services.common.authentication.AuthenticationServiceComposition._
 import io.digitalcat.publictransportation.services.common.authentication.TokenContent
-import io.digitalcat.publictransportation.services.common.response.GeneratedIdDone
-import io.digitalcat.publictransportation.services.identity.api.{IdentityService, TokenRefreshDone, UserLoginDone}
+import io.digitalcat.publictransportation.services.identity.api.IdentityService
 import io.digitalcat.publictransportation.services.identity.impl.util.{JwtTokenUtil, SecurePasswordHashing}
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success}
+import io.digitalcat.publictransportation.services.common.validation.ValidationUtil._
+import io.digitalcat.publictransportation.services.identity.api.request.WithUserCreationFields
+import io.digitalcat.publictransportation.services.identity.api.response.{TokenRefreshDone, UserLoginDone}
 
 class IdentityServiceImpl(
   persistentRegistry: PersistentEntityRegistry,
@@ -21,18 +22,29 @@ class IdentityServiceImpl(
 )(implicit ec: ExecutionContext) extends IdentityService
 {
   override def registerClient() = ServiceCall { request =>
-    val ref = persistentRegistry.refFor[IdentityEntity](UUID.randomUUID().toString)
+    validate(request)
 
-    ref.ask(
-      RegisterClient(
-        company = request.company,
-        firstName = request.firstName,
-        lastName = request.lastName,
-        email = request.email,
-        username = request.username,
-        password = request.password
-      )
-    )
+    val canProceed = tryReserveUsernameAndEmail(request)
+
+    canProceed.flatMap(canProceed => {
+      canProceed match {
+        case true => {
+          val ref = persistentRegistry.refFor[IdentityEntity](UUID.randomUUID().toString)
+
+          ref.ask(
+            RegisterClient(
+              company = request.company,
+              firstName = request.firstName,
+              lastName = request.lastName,
+              email = request.email,
+              username = request.username,
+              password = request.password
+            )
+          )
+        }
+        case false => throw BadRequest("Either username or email is already taken.")
+      }
+    })
   }
 
   override def getIdentityState() = authenticated { tokenContent =>
@@ -45,6 +57,8 @@ class IdentityServiceImpl(
 
   override def loginUser() = ServiceCall { request =>
     def passwordMatches(providedPassword: String, storedHashedPassword: String) = SecurePasswordHashing.validatePassword(providedPassword, storedHashedPassword)
+
+    validate(request)
 
     for {
       maybeUser <- identityRepository.findUserByUsername(request.username)
@@ -75,33 +89,36 @@ class IdentityServiceImpl(
 
   override def createUser() = authenticated { tokenContent =>
     ServerServiceCall { request =>
+      validate(request)
 
-      val canProceed = for {
-        userReserved <- identityRepository.reserveUsername(request.username)
-        emailReserved <- identityRepository.reserveEmail(request.email)
-      }
-      yield userReserved && emailReserved
+      val canProceed = tryReserveUsernameAndEmail(request)
 
-      val result = canProceed.flatMap(canProceed => {
+      canProceed.flatMap(canProceed => {
         canProceed match {
           case true => {
-              val ref = persistentRegistry.refFor[IdentityEntity](tokenContent.clientId.toString)
+            val ref = persistentRegistry.refFor[IdentityEntity](tokenContent.clientId.toString)
 
-              ref.ask(
+            ref.ask(
               CreateUser(
-              firstName = request.firstName,
-              lastName = request.lastName,
-              email = request.email,
-              username = request.username,
-              password = request.password
+                firstName = request.firstName,
+                lastName = request.lastName,
+                email = request.email,
+                username = request.username,
+                password = request.password
               )
             )
           }
           case false => throw BadRequest("Either username or email is already taken.")
         }
       })
-
-      result
     }
+  }
+
+  private def tryReserveUsernameAndEmail(userCreation: WithUserCreationFields) = {
+    for {
+      userReserved <- identityRepository.reserveUsername(userCreation.username)
+      emailReserved <- identityRepository.reserveEmail(userCreation.email)
+    }
+    yield userReserved && emailReserved
   }
 }

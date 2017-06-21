@@ -2,7 +2,7 @@ package io.digitalcat.publictransportation.services.identity.impl
 
 import com.lightbend.lagom.scaladsl.persistence.PersistentEntity
 import io.digitalcat.publictransportation.services.common.response.GeneratedIdDone
-import io.digitalcat.publictransportation.services.identity.api.IdentityStateDone
+import io.digitalcat.publictransportation.services.identity.api.response.IdentityStateDone
 import play.api.libs.json.{Format, Json}
 
 sealed trait IdentityCommand

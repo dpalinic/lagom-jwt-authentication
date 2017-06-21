@@ -12,6 +12,7 @@ val macwire = "com.softwaremill.macwire" %% "macros" % "2.2.5" % "provided"
 val scalaTest = "org.scalatest" %% "scalatest" % "3.0.1" % Test
 val base64 = "me.lessis" %% "base64" % "0.2.0"
 val jwt = "com.pauldijou" %% "jwt-play-json" % "0.12.1"
+val accord = "com.wix" %% "accord-core" % "0.6.1"
 
 lazy val `public-transportation-services` = (project in file("."))
   .aggregate(`common`, `identity-api`, `identity-impl`)
@@ -21,14 +22,16 @@ lazy val `common` = (project in file("common"))
     libraryDependencies ++= Seq(
       lagomScaladslApi,
       lagomScaladslServer,
-      jwt
+      jwt,
+      accord
     )
   )
 
 lazy val `identity-api` = (project in file("identity-api"))
   .settings(
     libraryDependencies ++= Seq(
-      lagomScaladslApi
+      lagomScaladslApi,
+      accord
     )
   )
   .dependsOn(`common`)

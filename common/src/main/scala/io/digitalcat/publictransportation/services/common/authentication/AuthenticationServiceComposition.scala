@@ -8,7 +8,7 @@ import play.api.libs.json._
 
 import scala.util.{Failure, Success}
 
-object Authentication {
+object AuthenticationServiceComposition {
   val secret = ConfigFactory.load().getString("jwt.secret")
   val algorithm = JwtAlgorithm.HS512
 

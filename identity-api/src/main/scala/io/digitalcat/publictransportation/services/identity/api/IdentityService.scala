@@ -4,7 +4,8 @@ import akka.NotUsed
 import com.lightbend.lagom.scaladsl.api.transport.Method
 import com.lightbend.lagom.scaladsl.api.{Service, ServiceCall}
 import io.digitalcat.publictransportation.services.common.response.GeneratedIdDone
-import play.api.libs.json.{Format, Json}
+import io.digitalcat.publictransportation.services.identity.api.request.{ClientRegistration, UserCreation, UserLogin}
+import io.digitalcat.publictransportation.services.identity.api.response.{IdentityStateDone, TokenRefreshDone, UserLoginDone}
 
 trait IdentityService extends Service {
   def registerClient(): ServiceCall[ClientRegistration, GeneratedIdDone]
@@ -25,69 +26,7 @@ trait IdentityService extends Service {
     ).withAutoAcl(true)
     // @formatter:on
   }
-}
 
-case class IdentityStateDone(
-  id: String,
-  company: String,
-  users: Seq[User]
-)
-object IdentityStateDone {
-  implicit val format: Format[IdentityStateDone] = Json.format
-}
 
-case class User(
-  id: String,
-  firstName: String,
-  lastName: String,
-  email: String,
-  username: String
-)
-object User {
-  implicit val format: Format[User] = Json.format
-}
-
-case class ClientRegistration(
-  company: String,
-  firstName: String,
-  lastName: String,
-  email: String,
-  username: String,
-  password: String
-)
-object ClientRegistration {
-  implicit val format: Format[ClientRegistration] = Json.format
-}
-
-case class UserLogin(
-  username: String,
-  password: String
-)
-object UserLogin {
-  implicit val format: Format[UserLogin] = Json.format
-}
-
-case class UserLoginDone(
-  authToken: String,
-  refreshToken: String
-)
-object UserLoginDone {
-  implicit val format: Format[UserLoginDone] = Json.format
-}
-
-case class TokenRefreshDone(authToken: String)
-object TokenRefreshDone {
-  implicit val format: Format[TokenRefreshDone] = Json.format
-}
-
-case class UserCreation(
-  firstName: String,
-  lastName: String,
-  email: String,
-  username: String,
-  password: String
-)
-object UserCreation {
-  implicit val format: Format[UserCreation] = Json.format
 }
 
