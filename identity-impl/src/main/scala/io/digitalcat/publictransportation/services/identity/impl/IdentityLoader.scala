@@ -2,10 +2,12 @@ package io.digitalcat.publictransportation.services.identity.impl
 
 import com.lightbend.lagom.scaladsl.api.ServiceLocator
 import com.lightbend.lagom.scaladsl.api.ServiceLocator.NoServiceLocator
+import com.lightbend.lagom.scaladsl.api.deser.DefaultExceptionSerializer
 import com.lightbend.lagom.scaladsl.devmode.LagomDevModeComponents
 import com.lightbend.lagom.scaladsl.persistence.cassandra.CassandraPersistenceComponents
 import com.lightbend.lagom.scaladsl.server._
 import com.softwaremill.macwire._
+import io.digitalcat.publictransportation.services.common.exception.handling.CustomExceptionSerializer
 import io.digitalcat.publictransportation.services.identity.api.IdentityService
 import play.api.libs.ws.ahc.AhcWSComponents
 
@@ -38,6 +40,8 @@ abstract class IdentityApplication(context: LagomApplicationContext)
 
   // Register dependencies
   lazy val identityRepository = wire[IdentityRepository]
+
+  override lazy val defaultExceptionSerializer = new CustomExceptionSerializer(environment)
 
   // Register the public-transportation-services persistent entity
   persistentEntityRegistry.register(wire[IdentityEntity])

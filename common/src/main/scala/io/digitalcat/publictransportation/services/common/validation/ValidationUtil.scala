@@ -2,6 +2,7 @@ package io.digitalcat.publictransportation.services.common.validation
 
 import com.wix.accord.transform.ValidationTransform
 import com.wix.accord.{Descriptions, Failure, Violation, validate => accordValidate}
+import io.digitalcat.publictransportation.services.common.exception.{ValidationError, ValidationException}
 
 object ValidationUtil {
   def validate[A](underValidation: A)(implicit validator: ValidationTransform.TransformedValidator[A]) = {
