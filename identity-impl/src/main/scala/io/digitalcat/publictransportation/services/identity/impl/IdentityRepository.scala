@@ -1,8 +1,12 @@
 package io.digitalcat.publictransportation.services.identity.impl
 
+import java.sql.Timestamp
 import java.util.UUID
 
+import com.datastax.driver.core.AbstractGettableData
 import com.lightbend.lagom.scaladsl.persistence.cassandra.CassandraSession
+import io.digitalcat.publictransportation.services.common.date.DateUtcUtil
+import org.joda.time.{DateTime, DateTimeZone}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -25,14 +29,18 @@ class IdentityRepository(db: CassandraSession)(implicit ec: ExecutionContext) {
   }
 
   def reserveUsername(username: String): Future[Boolean] = {
-    db.selectOne("INSERT INTO reserved_usernames (username) VALUES (?) IF NOT EXISTS", username).map {
+    val createdOn = new Timestamp(DateUtcUtil.now().getMillis)
+
+    db.selectOne("INSERT INTO reserved_usernames (username, created_on) VALUES (?, ?) IF NOT EXISTS", username, createdOn).map {
       case Some(row) => row.getBool("[applied]")
       case None => false
     }
   }
 
   def reserveEmail(email: String): Future[Boolean] = {
-    db.selectOne("INSERT INTO reserved_emails (email) VALUES (?) IF NOT EXISTS", email).map {
+    val createdOn = new Timestamp(DateUtcUtil.now().getMillis)
+
+    db.selectOne("INSERT INTO reserved_emails (email, created_on) VALUES (?, ?) IF NOT EXISTS", email, createdOn).map {
       case Some(row) => row.getBool("[applied]")
       case None => false
     }

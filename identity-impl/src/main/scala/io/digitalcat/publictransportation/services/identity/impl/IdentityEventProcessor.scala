@@ -12,6 +12,8 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class IdentityEventProcessor(session: CassandraSession, readSide: CassandraReadSide)(implicit ec: ExecutionContext) extends ReadSideProcessor[IdentityEvent] {
   private var insertUserStatement: PreparedStatement = _
+  private var reportIdToReservedUsernamesStatement: PreparedStatement = _
+  private var reportIdToReservedEmailsStatement: PreparedStatement = _
 
   override def buildHandler(): ReadSideHandler[IdentityEvent] = {
     readSide.builder[IdentityEvent]("identityEventOffset")
@@ -27,9 +29,13 @@ class IdentityEventProcessor(session: CassandraSession, readSide: CassandraReadS
 
   private def prepareStatements(): Future[Done] = {
     for {
-      insert <- session.prepare("INSERT INTO users(id, client_id, username, email, first_name, last_name, hashed_password) VALUES (?, ?, ?, ?, ?, ?, ?)")
+      insertUser <- session.prepare("INSERT INTO users(id, client_id, username, email, first_name, last_name, hashed_password) VALUES (?, ?, ?, ?, ?, ?, ?)")
+      reportIdToReservedUsernames <- session.prepare("UPDATE reserved_usernames SET user_id = ? WHERE username = ?")
+      reportIdToReservedEmails <- session.prepare("UPDATE reserved_emails SET user_id = ? WHERE email = ?")
     } yield {
-      insertUserStatement = insert
+      insertUserStatement = insertUser
+      reportIdToReservedUsernamesStatement = reportIdToReservedUsernames
+      reportIdToReservedEmailsStatement = reportIdToReservedEmails
       Done
     }
   }
@@ -45,7 +51,9 @@ class IdentityEventProcessor(session: CassandraSession, readSide: CassandraReadS
           user.event.firstName,
           user.event.lastName,
           user.event.hashedPassword
-        )
+        ),
+        reportIdToReservedUsernamesStatement.bind(user.event.userId, user.event.username),
+        reportIdToReservedEmailsStatement.bind(user.event.userId, user.event.email)
       )
     )
   }

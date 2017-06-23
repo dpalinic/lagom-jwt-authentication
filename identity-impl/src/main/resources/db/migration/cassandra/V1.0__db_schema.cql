@@ -17,10 +17,12 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS users_by_username AS
 
 CREATE TABLE IF NOT EXISTS reserved_usernames(
     username varchar,
-    id       uuid, PRIMARY KEY (username)
+    user_id  uuid,
+    created_on timestamp, PRIMARY KEY (username)
 );
 
 CREATE TABLE IF NOT EXISTS reserved_emails(
     email    varchar,
-    id       uuid, PRIMARY KEY (email)
+    user_id  uuid,
+    created_on timestamp, PRIMARY KEY (email)
 );
