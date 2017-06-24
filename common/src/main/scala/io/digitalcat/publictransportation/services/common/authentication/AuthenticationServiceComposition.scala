@@ -12,12 +12,13 @@ object AuthenticationServiceComposition {
   val secret = ConfigFactory.load().getString("jwt.secret")
   val algorithm = JwtAlgorithm.HS512
 
-  def authenticated[Request, Response](serviceCall: TokenContent => ServerServiceCall[Request, Response]) =
+  def authenticated[Request, Response](serviceCall: (TokenContent, String) => ServerServiceCall[Request, Response]) =
     ServerServiceCall.compose { requestHeader =>
       val tokenContent = extractTokenContent(requestHeader).filter(tokenContent => isAuthToken(tokenContent))
+      val authToken = extractTokenHeader(requestHeader)
 
       tokenContent match {
-        case Some(tokenContent) => serviceCall(tokenContent)
+        case Some(tokenContent) => serviceCall(tokenContent, authToken.getOrElse(""))
         case _ => throw Forbidden("Authorization token is invalid")
       }
     }
@@ -32,9 +33,13 @@ object AuthenticationServiceComposition {
       }
     }
 
-  private def extractTokenContent[Response, Request](requestHeader: RequestHeader) = {
+  private def extractTokenHeader(requestHeader: RequestHeader) = {
     requestHeader.getHeader("Authorization")
       .map(header => sanitizeToken(header))
+  }
+
+  private def extractTokenContent[Response, Request](requestHeader: RequestHeader) = {
+    extractTokenHeader(requestHeader)
       .filter(rawToken => validateToken(rawToken))
       .map(rawToken => decodeToken(rawToken))
   }

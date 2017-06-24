@@ -13,8 +13,6 @@ object UserLogin {
 
   implicit val userLoginValidation = validator[UserLogin] { u =>
     u.username as "username.notEmpty" is notEmpty
-    u.username as "username.size" has size > 5
     u.password as "password.notEmpty" is notEmpty
-    u.password as "password.size" has size > 8
   }
 }
