@@ -42,7 +42,7 @@ class IdentityServiceImpl(
     reserveUsernameAndEmail(request, executeCommandCallback)
   }
 
-  override def getIdentityState() = authenticated { tokenContent =>
+  override def getIdentityState() = authenticated { (tokenContent, _) =>
     ServerServiceCall { _ =>
       val ref = persistentRegistry.refFor[IdentityEntity](tokenContent.clientId.toString)
 
@@ -82,7 +82,7 @@ class IdentityServiceImpl(
     }
   }
 
-  override def createUser() = authenticated { tokenContent =>
+  override def createUser() = authenticated { (tokenContent, _) =>
     ServerServiceCall { request =>
       validate(request)
 
