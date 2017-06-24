@@ -167,6 +167,7 @@ None
 `PUT http://localhost:9000/api/user/token`
 
 **Request Headers**
+
 | Key           | Value        |
 | --------------|:-------------|
 | Authorization | Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJleHAiOjE0OTgzOTAzMjMsImlhdCI6MTQ5ODMwMzkyMywiY2xpZW50SWQiOiI5YmRmZTRkMy1lZjIzLTRjZDgtOGFiNy1lNzBhNWZmZTE3MjIiLCJ1c2VySWQiOiJhZWM0NjU0NS1jNDQxLTRjYTItODEzNC1hMTcyN2NiOGVkODYiLCJ1c2VybmFtZSI6ImRwYWxpbmljIiwiaXNSZWZyZXNoVG9rZW4iOnRydWV9.I-Asm-ewQysboUDkaNRD6SK-yTSx2uza4szlC8ZLw8gZgnuSaXMKu86Ab-swMSnOjU_ubm6-73D55ydwM28e1w |
