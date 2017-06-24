@@ -3,10 +3,8 @@ package io.digitalcat.publictransportation.services.identity.impl
 import java.sql.Timestamp
 import java.util.UUID
 
-import com.datastax.driver.core.AbstractGettableData
 import com.lightbend.lagom.scaladsl.persistence.cassandra.CassandraSession
 import io.digitalcat.publictransportation.services.common.date.DateUtcUtil
-import org.joda.time.{DateTime, DateTimeZone}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -37,6 +35,10 @@ class IdentityRepository(db: CassandraSession)(implicit ec: ExecutionContext) {
     }
   }
 
+  def unreserveUsername(username: String) = {
+    db.executeWrite("DELETE FROM reserved_usernames WHERE username = ?", username)
+  }
+
   def reserveEmail(email: String): Future[Boolean] = {
     val createdOn = new Timestamp(DateUtcUtil.now().getMillis)
 
@@ -44,6 +46,10 @@ class IdentityRepository(db: CassandraSession)(implicit ec: ExecutionContext) {
       case Some(row) => row.getBool("[applied]")
       case None => false
     }
+  }
+
+  def unreserveEmail(email: String) = {
+    db.executeWrite("DELETE FROM reserved_emails WHERE email = ?", email)
   }
 }
 
