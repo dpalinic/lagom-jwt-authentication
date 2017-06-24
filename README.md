@@ -65,7 +65,7 @@ None
 }
 ```
 
-#### Login with created user
+### Login with created user
 
 **URL**
 
@@ -93,7 +93,7 @@ None
 
 `authToken` is used for authorization and it lives for 5 minutes. Refresh token is used to generate a new authorization token and it lives for 24 hours.
 
-#### Create another user
+### Create another user
 
 **URL**
 
@@ -123,7 +123,7 @@ None
 }
 ```
 
-#### Get current state
+### Get current state
 
 **URL**
 
@@ -160,7 +160,7 @@ None
 }
 ```
 
-#### Obtain a new authorization token
+### Obtain a new authorization token
 
 **URL**
 
