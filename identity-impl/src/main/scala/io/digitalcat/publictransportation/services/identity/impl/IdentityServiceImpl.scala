@@ -105,16 +105,28 @@ class IdentityServiceImpl(
   }
 
   private def reserveUsernameAndEmail[B](request: WithUserCreationFields, onSuccess: () => Future[B]): Future[B] = {
+    def rollbackReservations(request: WithUserCreationFields,usernameReserved: Boolean, emailReserved: Boolean) = {
+      if (usernameReserved) {
+        identityRepository.unreserveUsername(request.username)
+      }
+      if (emailReserved) {
+        identityRepository.unreserveEmail(request.email)
+      }
+    }
+
     val canProceed = for {
-      userReserved <- identityRepository.reserveUsername(request.username)
+      usernameReserved <- identityRepository.reserveUsername(request.username)
       emailReserved <- identityRepository.reserveEmail(request.email)
     }
-    yield userReserved && emailReserved
+    yield (usernameReserved, emailReserved)
 
     canProceed.flatMap(canProceed => {
-      canProceed match {
+      (canProceed._1 && canProceed._2) match {
         case true => onSuccess.apply()
-        case false => throw BadRequest("Either username or email is already taken.")
+        case false => {
+          rollbackReservations(request, canProceed._1, canProceed._2)
+          throw BadRequest("Either username or email is already taken.")
+        }
       }
     })
   }
