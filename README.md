@@ -30,7 +30,10 @@ Error handling:
 
 ## Create a database schema
 
-1. Execute cql statements from `identity-impl/src/main/resources/V1.0__db_schema.cql` to create needed Cassandra database schema.
+Execute cql statements from `identity-impl/src/main/resources/V1.0__db_schema.cql` to create needed Cassandra database schema.
+
+1. Connect to Cassandra with `cqlsh localhost 4000`
+2. Import schema with `source '/absolute/path/lagom-jwt-authentication/identity-impl/src/main/resources/db/migration/cassandra/V1.0__db_schema.cql'`. Please replace `/absolute/path/` with your absolute path to application.
  
 ## Use services
  
