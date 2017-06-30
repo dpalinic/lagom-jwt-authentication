@@ -17,7 +17,7 @@ Error handling:
 - Custom error handling to show fields which failed a validation (can be used to show errors on frontend easily)
 
 # Health 
-[![Build Status](https://travis-ci.org/dpalinic/public-transportation-services.svg?branch=master)](https://travis-ci.org/dpalinic/public-transportation-services)
+[![Build Status](https://travis-ci.org/dpalinic/lagom-jwt-authentication.svg?branch=master)](https://travis-ci.org/dpalinic/lagom-jwt-authentication)
 
 # How To
 
