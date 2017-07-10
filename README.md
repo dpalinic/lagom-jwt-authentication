@@ -37,7 +37,7 @@ Execute cql statements from `identity-impl/src/main/resources/V1.0__db_schema.cq
  
 ## Use services
  
-Postman collections can be found here: https://www.getpostman.com/collections/ee0f1331422a982bc7f0
+Postman collections can be found here: https://www.getpostman.com/collections/d566251b1d304d73b0d7
 
 ### Create a client and initial user
 
