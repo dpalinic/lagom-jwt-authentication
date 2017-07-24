@@ -30,9 +30,7 @@ object JwtTokenUtil {
   }
 
   def generateAuthTokenOnly(content: TokenContent)(implicit format: Format[TokenContent]): Token = {
-    val newContent = content.copy(isRefreshToken = false)
-
-    val authClaim = JwtClaim(Json.toJson(newContent).toString())
+    val authClaim = JwtClaim(Json.toJson(content.copy(isRefreshToken = false)).toString())
       .expiresIn(authExpiration)
       .issuedNow
 
